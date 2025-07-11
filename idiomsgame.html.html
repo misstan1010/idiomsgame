@@ -1,276 +1,224 @@
-import random
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>成语学习游戏</title>
+  <style>
+    body {
+      font-family: 'Microsoft YaHei', sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+      color: #e67e22;
+    }
+    .game-mode-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .game-mode-buttons button {
+      padding: 10px 20px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .game-mode-buttons button.active {
+      background-color: #e74c3c;
+    }
+    .question-area {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .question {
+      font-size: 20px;
+      margin-bottom: 15px;
+    }
+    .options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .option-btn {
+      padding: 10px;
+      background-color: #ecf0f1;
+      border: 2px solid #bdc3c7;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .option-btn.correct {
+      background-color: #2ecc71;
+      color: white;
+    }
+    .option-btn.incorrect {
+      background-color: #e74c3c;
+      color: white;
+    }
+    .result-screen {
+      text-align: center;
+      margin-top: 30px;
+    }
+    .hidden {
+      display: none;
+    }
+    .control-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #27ae60;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>成语学习游戏</h1>
+  <div class="game-mode-buttons">
+    <button data-mode="fill-blank" class="active">练习一：成语填空</button>
+    <button data-mode="pinyin-choose">练习二：拼音选择</button>
+    <button data-mode="missing-char">练习三：缺字填空</button>
+  </div>
 
-# 根据PDF文件整理的成语库
-idioms = {
-    "才疏学浅": {"pinyin": "cái shū xué qiǎn", "meaning": "常用于自我谦逊，表示自己能力不足，学识有限"},
-    "餐风饮露": {"pinyin": "cān fēng yǐn lù", "meaning": "形容旅途或野外生活的艰苦"},
-    "惨不忍睹": {"pinyin": "cǎn bù rěn dǔ", "meaning": "形容情状凄惨，令人不忍看下去"},
-    "惨淡经营": {"pinyin": "cǎn dàn jīng yíng", "meaning": "用尽全部力量去做"},
-    "惨绝人寰": {"pinyin": "cǎn jué rén huán", "meaning": "悲惨至极"},
-    "沧海桑田": {"pinyin": "cāng hǎi sāng tián", "meaning": "比喻世事变化巨大"},
-    "藏龙卧虎": {"pinyin": "cáng lóng wò hǔ", "meaning": "隐藏不露的各种人才"},
-    "藏污纳垢": {"pinyin": "cáng wū nà gòu", "meaning": "比喻隐藏或包容坏人坏事，形容坏人聚积的场所"},
-    "操之过急": {"pinyin": "cāo zhī guò jí", "meaning": "处理事情或解决问题时过于急躁"},
-    "草菅人命": {"pinyin": "cǎo jiān rén mìng", "meaning": "比喻轻视人命，任意加以残害。贬义"},
-    "参差不齐": {"pinyin": "cēn cī bù qí", "meaning": "形容很不整齐或水平不一"},
-    "长年累月": {"pinyin": "cháng nián lěi yuè", "meaning": "形容经过了很长的时间，强调时间漫长"},
-    "长篇大论": {"pinyin": "cháng piān dà lùn", "meaning": "篇幅冗长的文章，滔滔不绝的言论（多含讥讽意）"},
-    "长吁短叹": {"pinyin": "cháng xū duǎn tàn", "meaning": "（因烦恼、苦闷、悲伤等）不停地长一声短一声地叹气"},
-    "畅所欲言": {"pinyin": "chàng suǒ yù yán", "meaning": "痛痛快快地说出想说的话"},
-    "车水马龙": {"pinyin": "chē shuǐ mǎ lóng", "meaning": "车如流水，马如游龙。形容交通繁忙，繁华热闹"},
-    "彻头彻尾": {"pinyin": "chè tóu chè wěi", "meaning": "从头到尾，完完全全"},
-    "陈词滥调": {"pinyin": "chén cí làn diào", "meaning": "形容语言陈腐、空泛"},
-    "沉默寡言": {"pinyin": "chén mò guǎ yán", "meaning": "不声不响，很少说话，形容人性格内向，不爱多言"},
-    "趁火打劫": {"pinyin": "chèn huǒ dā jié", "meaning": "趁着人家失火去抢东西；泛指乘人危难时去捞好处"},
-    "称心如意": {"pinyin": "chèn xīn rú yì", "meaning": "形容事情的发展完全符合心意，一切都令人满意"},
-    "瞠目结舌": {"pinyin": "chēng mù jié shé", "meaning": "瞪眼翘舌说不出话来。形容人窘迫或惊呆的样子"},
-    "成人之美": {"pinyin": "chéng rén zhī měi", "meaning": "成全别人的好事，帮助别人实现愿望"},
-    "嗤之以鼻": {"pinyin": "chī zhī yǐ bí", "meaning": "用鼻子发出冷笑，表示不屑、鄙视"},
-    "持论公允": {"pinyin": "chí lùn gōng yǔn", "meaning": "言论公平，合乎情理"}
-}
+  <div class="question-area" id="question-area">
+    <div class="question" id="question">点击开始游戏</div>
+    <div class="options" id="options"></div>
+    <button class="control-btn" id="next-btn">下一题</button>
+  </div>
 
-def display_welcome():
-    print("====================================")
-    print("      六月份会考成语学习游戏       ")
-    print("====================================")
-    print("本游戏包含25个会考成语，通过多种题型")
-    print("帮助您掌握成语的写法、读音和含义。")
-    print("------------------------------------")
-    print("题型包括：")
-    print("1. 选择题练习 - 根据成语选正确解释")
-    print("2. 错别字识别 - 找出并改正错别字")
-    print("3. 成语填空 - 补全成语缺失的字")
-    print("4. 拼音匹配 - 选择成语的正确拼音")
-    print("5. 词义配对 - 根据解释选择成语")
-    print("====================================\n")
+  <div class="result-screen hidden" id="result-screen">
+    <h2>答题结束！</h2>
+    <p id="final-score"></p>
+    <p>🎉 很棒！继续加油！🎉</p>
+    <button class="control-btn" id="restart-btn">再玩一次</button>
+  </div>
 
-def main_menu():
-    print("\n主菜单")
-    print("1. 选择题练习")
-    print("2. 错别字识别")
-    print("3. 成语填空")
-    print("4. 拼音匹配")
-    print("5. 词义配对")
-    print("6. 查看所有成语")
-    print("7. 退出")
-    choice = input("请选择练习类型(1-7): ")
-    return choice
+  <script>
+    const fillBlank = [
+      { sentence: "老师讲解时思路清晰，（    ），让学生容易理解。", options: ["言之有理", "长吁短叹", "草菅人命", "藏污纳垢"], answer: "言之有理" },
+      { sentence: "他虽然很努力，但毕竟（    ），经验不足导致失误。", options: ["餐风饮露", "沧海桑田", "才疏学浅", "嗤之以鼻"], answer: "才疏学浅" },
+      { sentence: "这个地方坏人聚集，是个（    ）之地。", options: ["出类拔萃", "藏污纳垢", "言之有理", "操之过急"], answer: "藏污纳垢" },
+      { sentence: "他办事总是（    ），结果总出问题。", options: ["持论公允", "操之过急", "陈词滥调", "长篇大论"], answer: "操之过急" },
+      { sentence: "有些商人（    ），趁机涨价，非常可恶。", options: ["趁火打劫", "餐风饮露", "嗤之以鼻", "彻头彻尾"], answer: "趁火打劫" },
+      { sentence: "他突然听到消息，吓得（    ）。", options: ["卧虎藏龙", "长篇大论", "瞠目结舌", "持论公允"], answer: "瞠目结舌" },
+      { sentence: "她发言总是（    ），大家都很信服。", options: ["草菅人命", "持论公允", "陈词滥调", "操之过急"], answer: "持论公允" },
+      { sentence: "世界变化太快，真是（    ）。", options: ["沧海桑田", "才疏学浅", "长吁短叹", "畅所欲言"], answer: "沧海桑田" },
+      { sentence: "他的话从头到尾都是（    ），没有一句真话。", options: ["餐风饮露", "彻头彻尾", "持论公允", "瞠目结舌"], answer: "彻头彻尾" },
+      { sentence: "即使生活艰难，他也（    ）地努力生活。", options: ["餐风饮露", "嗤之以鼻", "陈词滥调", "言之有理"], answer: "餐风饮露" }
+    ];
 
-def multiple_choice():
-    idiom = random.choice(list(idioms.keys()))
-    print(f"\n成语【{idiom}】的意思是:")
-    
-    # 准备选项 (1个正确答案和3个干扰项)
-    options = [idioms[idiom]["meaning"]]
-    while len(options) < 4:
-        wrong = random.choice(list(idioms.values()))["meaning"]
-        if wrong not in options:
-            options.append(wrong)
-    
-    random.shuffle(options)
-    
-    for i, option in enumerate(options, 1):
-        print(f"{i}. {option}")
-    
-    while True:
-        answer = input("请选择正确答案(1-4): ")
-        if answer in ["1", "2", "3", "4"]:
-            break
-        print("请输入1-4之间的数字!")
-    
-    if options[int(answer)-1] == idioms[idiom]["meaning"]:
-        print("\n✓ 正确!")
-        print(f"成语【{idiom}】的拼音是: {idioms[idiom]['pinyin']}")
-        return True
-    else:
-        print("\n✗ 错误!")
-        print(f"正确答案是: {idioms[idiom]['meaning']}")
-        print(f"成语【{idiom}】的拼音是: {idioms[idiom]['pinyin']}")
-        return False
+    const pinyinChoose = [
+      { sentence: "“长吁短叹”中的“叹”的拼音是？", options: ["tān", "tán", "tǎn", "tàn"], answer: "tàn" },
+      { sentence: "“车水马龙”中的“龙”的拼音是？", options: ["lōng", "lóng", "lǒng", "lòng"], answer: "lóng" },
+      { sentence: "“惨淡经营”中的“营”的拼音是？", options: ["yīng", "yíng", "yǐng", "yìng"], answer: "yíng" },
+      { sentence: "“畅所欲言”中的“畅”的拼音是？", options: ["chāng", "chàng", "cháng", "chàng"], answer: "chàng" },
+      { sentence: "“惨绝人寰”中的“寰”的拼音是？", options: ["huān", "huán", "huǎn", "huàn"], answer: "huán" },
+      { sentence: "“嗤之以鼻”中的“嗤”的拼音是？", options: ["chī", "chǐ", "chí", "chǐ"], answer: "chī" },
+      { sentence: "“成人之美”中的“美”的拼音是？", options: ["měi", "méi", "mèi", "mí"], answer: "měi" },
+      { sentence: "“草菅人命”中的“菅”的拼音是？", options: ["jiān", "jiàn", "jiǎn", "jīn"], answer: "jiān" },
+      { sentence: "“陈词滥调”中的“滥”的拼音是？", options: ["làn", "lán", "lán", "lǎn"], answer: "làn" },
+      { sentence: "“惨不忍睹”中的“睹”的拼音是？", options: ["dǔ", "dú", "dū", "dù"], answer: "dǔ" }
+    ];
 
-def wrong_character():
-    idiom = random.choice(list(idioms.keys()))
-    chars = list(idiom)
-    wrong_pos = random.randint(0, len(chars)-1)
-    
-    # 生成一个不同的汉字作为错别字
-    all_chars = set("".join(idioms.keys()))
-    wrong_char = random.choice(list(all_chars - set(chars[wrong_pos])))
-    
-    wrong_idiom = chars.copy()
-    wrong_idiom[wrong_pos] = wrong_char
-    wrong_idiom = "".join(wrong_idiom)
-    
-    print(f"\n找出下列成语中的错别字并改正:")
-    print(f"错误成语: {wrong_idiom}")
-    
-    while True:
-        answer = input("请输入正确的成语: ")
-        if len(answer) == len(idiom):
-            break
-        print(f"成语应为{len(idiom)}个字，请重新输入!")
-    
-    if answer == idiom:
-        print("\n✓ 正确!")
-        print(f"成语【{idiom}】的意思是: {idioms[idiom]['meaning']}")
-        print(f"拼音是: {idioms[idiom]['pinyin']}")
-        return True
-    else:
-        print("\n✗ 错误!")
-        print(f"正确答案是: {idiom}")
-        print(f"意思是: {idioms[idiom]['meaning']}")
-        print(f"拼音是: {idioms[idiom]['pinyin']}")
-        return False
+    const missingChar = [
+      { sentence: "沉默寡（ ）", options: ["语", "言", "说", "闲"], answer: "言" },
+      { sentence: "出类拔（ ）", options: ["萃", "粹", "尖", "萄"], answer: "萃" },
+      { sentence: "卧（ ）藏龙", options: ["牛", "虎", "犬", "猪"], answer: "虎" },
+      { sentence: "称心如（ ）", options: ["意", "愿", "心", "想"], answer: "意" },
+      { sentence: "长篇大（ ）", options: ["调", "篇", "论", "念"], answer: "论" },
+      { sentence: "言之有（ ）", options: ["力", "理", "味", "义"], answer: "理" },
+      { sentence: "陈词滥（ ）", options: ["言", "谈", "调", "表"], answer: "调" },
+      { sentence: "嗤之以（ ）", options: ["嘴", "鼻", "笑", "手"], answer: "鼻" },
+      { sentence: "餐风饮（ ）", options: ["水", "雨", "露", "风"], answer: "露" },
+      { sentence: "瞠目结（ ）", options: ["舌", "嘴", "口", "眼"], answer: "舌" }
+    ];
 
-def fill_in_the_blank():
-    idiom = random.choice(list(idioms.keys()))
-    blank_pos = random.randint(0, len(idiom)-1)
-    blank_idiom = list(idiom)
-    blank_char = blank_idiom[blank_pos]
-    blank_idiom[blank_pos] = "___"
-    blank_idiom = "".join(blank_idiom)
-    
-    print(f"\n请补全成语:")
-    print(f"{blank_idiom}")
-    
-    answer = input(f"请填入第{blank_pos+1}个字: ")
-    
-    if answer == blank_char:
-        print("\n✓ 正确!")
-        print(f"完整成语: {idiom}")
-        print(f"意思是: {idioms[idiom]['meaning']}")
-        print(f"拼音是: {idioms[idiom]['pinyin']}")
-        return True
-    else:
-        print("\n✗ 错误!")
-        print(f"正确答案是: '{blank_char}'")
-        print(f"完整成语: {idiom}")
-        print(f"意思是: {idioms[idiom]['meaning']}")
-        print(f"拼音是: {idioms[idiom]['pinyin']}")
-        return False
+    let currentMode = 'fill-blank';
+    let currentIndex = 0;
+    let score = 0;
+    let questions = [];
 
-def pinyin_match():
-    idiom = random.choice(list(idioms.keys()))
-    print(f"\n成语【{idiom}】的拼音是:")
-    
-    # 准备选项 (1个正确答案和3个干扰项)
-    options = [idioms[idiom]["pinyin"]]
-    while len(options) < 4:
-        wrong = random.choice(list(idioms.values()))["pinyin"]
-        if wrong not in options:
-            options.append(wrong)
-    
-    random.shuffle(options)
-    
-    for i, option in enumerate(options, 1):
-        print(f"{i}. {option}")
-    
-    while True:
-        answer = input("请选择正确答案(1-4): ")
-        if answer in ["1", "2", "3", "4"]:
-            break
-        print("请输入1-4之间的数字!")
-    
-    if options[int(answer)-1] == idioms[idiom]["pinyin"]:
-        print("\n✓ 正确!")
-        print(f"成语【{idiom}】的意思是: {idioms[idiom]['meaning']}")
-        return True
-    else:
-        print("\n✗ 错误!")
-        print(f"正确答案是: {idioms[idiom]['pinyin']}")
-        print(f"成语【{idiom}】的意思是: {idioms[idiom]['meaning']}")
-        return False
+    const questionEl = document.getElementById('question');
+    const optionsEl = document.getElementById('options');
+    const nextBtn = document.getElementById('next-btn');
+    const resultScreen = document.getElementById('result-screen');
+    const questionArea = document.getElementById('question-area');
+    const finalScore = document.getElementById('final-score');
+    const restartBtn = document.getElementById('restart-btn');
+    const modeBtns = document.querySelectorAll('.game-mode-buttons button');
 
-def meaning_match():
-    idiom, info = random.choice(list(idioms.items()))
-    print(f"\n【{info['meaning']}】 对应的成语是:")
-    
-    # 准备选项 (1个正确答案和3个干扰项)
-    options = [idiom]
-    while len(options) < 4:
-        wrong = random.choice(list(idioms.keys()))
-        if wrong not in options:
-            options.append(wrong)
-    
-    random.shuffle(options)
-    
-    for i, option in enumerate(options, 1):
-        print(f"{i}. {option}")
-    
-    while True:
-        answer = input("请选择正确答案(1-4): ")
-        if answer in ["1", "2", "3", "4"]:
-            break
-        print("请输入1-4之间的数字!")
-    
-    if options[int(answer)-1] == idiom:
-        print("\n✓ 正确!")
-        print(f"成语【{idiom}】的拼音是: {info['pinyin']}")
-        return True
-    else:
-        print("\n✗ 错误!")
-        print(f"正确答案是: {idiom}")
-        print(f"拼音是: {info['pinyin']}")
-        return False
+    function loadQuestions() {
+      switch (currentMode) {
+        case 'fill-blank': questions = fillBlank; break;
+        case 'pinyin-choose': questions = pinyinChoose; break;
+        case 'missing-char': questions = missingChar; break;
+      }
+      currentIndex = 0;
+      score = 0;
+      resultScreen.classList.add('hidden');
+      questionArea.classList.remove('hidden');
+      showQuestion();
+    }
 
-def show_all_idioms():
-    print("\n所有会考成语列表:")
-    print("====================================")
-    for idx, (idiom, info) in enumerate(idioms.items(), 1):
-        print(f"{idx:2d}. {idiom} - {info['pinyin']}")
-        print(f"    意思: {info['meaning']}")
-        if idx < len(idioms):
-            print("------------------------------------")
-    print("====================================")
-    input("\n按Enter键返回主菜单...")
+    function showQuestion() {
+      const q = questions[currentIndex];
+      questionEl.innerHTML = q.sentence;
+      optionsEl.innerHTML = '';
+      q.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.textContent = opt;
+        btn.onclick = () => handleAnswer(btn, opt === q.answer);
+        optionsEl.appendChild(btn);
+      });
+    }
 
-def play_game():
-    score = 0
-    rounds = 0
-    
-    display_welcome()
-    
-    while True:
-        choice = main_menu()
-        
-        if choice == "1":
-            if multiple_choice():
-                score += 1
-            rounds += 1
-        elif choice == "2":
-            if wrong_character():
-                score += 1
-            rounds += 1
-        elif choice == "3":
-            if fill_in_the_blank():
-                score += 1
-            rounds += 1
-        elif choice == "4":
-            if pinyin_match():
-                score += 1
-            rounds += 1
-        elif choice == "5":
-            if meaning_match():
-                score += 1
-            rounds += 1
-        elif choice == "6":
-            show_all_idioms()
-            continue
-        elif choice == "7":
-            break
-        else:
-            print("无效选择，请重新输入")
-            continue
-        
-        if rounds > 0:
-            print(f"\n当前得分: {score}/{rounds} (正确率: {score/rounds*100:.1f}%)")
-        input("\n按Enter键继续...")
-    
-    if rounds > 0:
-        print(f"\n游戏结束! 最终得分: {score}/{rounds} (正确率: {score/rounds*100:.1f}%)")
-    
-    print("\n祝你在会考中取得好成绩!")
-    print("====================================")
+    function handleAnswer(button, correct) {
+      document.querySelectorAll('.option-btn').forEach(btn => btn.disabled = true);
+      if (correct) {
+        button.classList.add('correct');
+        score += 1;
+      } else {
+        button.classList.add('incorrect');
+        [...optionsEl.children].find(btn => btn.textContent === questions[currentIndex].answer).classList.add('correct');
+      }
+    }
 
-if __name__ == "__main__":
-    play_game()
+    nextBtn.onclick = () => {
+      currentIndex++;
+      if (currentIndex < questions.length) {
+        showQuestion();
+      } else {
+        questionArea.classList.add('hidden');
+        resultScreen.classList.remove('hidden');
+        finalScore.textContent = `总得分：${score} / ${questions.length}`;
+      }
+    };
+
+    restartBtn.onclick = loadQuestions;
+
+    modeBtns.forEach(btn => {
+      btn.onclick = () => {
+        modeBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentMode = btn.dataset.mode;
+        loadQuestions();
+      };
+    });
+
+    loadQuestions();
+  </script>
+</body>
+</html>
